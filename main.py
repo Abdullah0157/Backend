@@ -14,8 +14,9 @@ from database import SessionLocal, engine, get_db
 load_dotenv()
 
 # Configure Gemini
-GEMINI_API_KEY = "AIzaSyBbAHhfzd0Upx2PEg66cSNhiNokYzGaiKU"
-genai.configure(api_key=GEMINI_API_KEY)
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 models.Base.metadata.create_all(bind=engine)
@@ -138,3 +139,39 @@ def record_metric(metric_name: str, update: schemas.AnalyticsUpdate, db: Session
 @app.get("/api/analytics", response_model=List[schemas.Analytics])
 def get_analytics(db: Session = Depends(get_db)):
     return crud.get_all_analytics(db=db)
+
+@app.post("/api/chat")
+async def chat(request: schemas.ChatRequest):
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="Gemini API Key is not configured on the server.")
+    
+    try:
+        # Prepend the system instruction to format chatbot behavior securely
+        system_instruction = (
+            "You are JobStream AI, a premium career concierge. Be supportive, professional, and elite. "
+            "NEVER use triple asterisks like ***. Use standard Markdown for bold (**text**) and headers (### Title). "
+            "ALWAYS encourage the user to upload their resume using the paperclip icon below. "
+            "When presenting matches, start with: 'Yes! Based on your CV I found [GREEN: X matching roles] — here are your top 3:'. "
+            "Use the format: [JOB: Title | Company | Salary]. Finally, add [MORE_JOBS]."
+        )
+        
+        # Format the chat history to pass to Gemini
+        contents = []
+        for msg in request.contents:
+            parts = [p.text for p in msg.parts]
+            contents.append({
+                "role": "model" if msg.role == "model" else "user",
+                "parts": parts
+            })
+            
+        chat_model = genai.GenerativeModel(
+            model_name='gemini-1.5-flash',
+            system_instruction=system_instruction
+        )
+        response = chat_model.generate_content(contents)
+        return {"text": response.text}
+    except Exception as e:
+        print(f"Gemini API error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+

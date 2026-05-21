@@ -55,3 +55,13 @@ class Analytics(AnalyticsBase):
 
     class Config:
         from_attributes = True
+
+class ChatMessagePart(BaseModel):
+    text: str
+
+class ChatMessage(BaseModel):
+    role: str
+    parts: List[ChatMessagePart]
+
+class ChatRequest(BaseModel):
+    contents: List[ChatMessage]
