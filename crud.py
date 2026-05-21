@@ -20,3 +20,17 @@ def create_referral(db: Session, referral: schemas.ReferralCreate):
     db.commit()
     db.refresh(db_referral)
     return db_referral
+
+def update_analytics(db: Session, metric_name: str, increment_by: int = 1):
+    db_metric = db.query(models.Analytics).filter(models.Analytics.metric_name == metric_name).first()
+    if not db_metric:
+        db_metric = models.Analytics(metric_name=metric_name, value=increment_by)
+        db.add(db_metric)
+    else:
+        db_metric.value += increment_by
+    db.commit()
+    db.refresh(db_metric)
+    return db_metric
+
+def get_all_analytics(db: Session):
+    return db.query(models.Analytics).all()

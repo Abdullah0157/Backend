@@ -41,3 +41,17 @@ class Referral(ReferralBase):
 
     class Config:
         from_attributes = True
+
+class AnalyticsBase(BaseModel):
+    metric_name: str
+    value: int
+
+class AnalyticsUpdate(BaseModel):
+    increment_by: int = 1
+
+class Analytics(AnalyticsBase):
+    id: int
+    last_updated: datetime
+
+    class Config:
+        from_attributes = True

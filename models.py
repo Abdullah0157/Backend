@@ -29,3 +29,11 @@ class Referral(Base):
     job_id = Column(Integer)
     referral_code = Column(String)
     timestamp = Column(DateTime, default=datetime.utcnow)
+
+class Analytics(Base):
+    __tablename__ = "analytics"
+
+    id = Column(Integer, primary_key=True, index=True)
+    metric_name = Column(String, unique=True, index=True) # e.g. "total_visits", "total_applies", "total_time"
+    value = Column(Integer, default=0)
+    last_updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
