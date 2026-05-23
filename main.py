@@ -17,7 +17,7 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-2.0-flash')
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -166,7 +166,7 @@ async def chat(request: schemas.ChatRequest):
             })
             
         chat_model = genai.GenerativeModel(
-            model_name='gemini-1.5-flash',
+            model_name='gemini-2.0-flash',
             system_instruction=system_instruction
         )
         response = chat_model.generate_content(contents)
